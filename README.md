@@ -1,42 +1,42 @@
 # Motion CAPTCHA
 
-An experimental CAPTCHA that exploits **persistence of vision** — a property of human perception that AI cannot replicate.
+> **Experimental** — This is a research project, not a production-ready solution. The hardened mode resists all attacks we've tested so far, but that doesn't mean it's unbreakable.
+
+An experimental CAPTCHA that exploits **persistence of vision** to distinguish humans from bots. Text is hidden in animated binary noise — each frame looks like random static, but the human visual system integrates motion over time and reveals the text. A bot seeing individual frames (or even all frames) sees only noise — cracking it requires running targeted analysis scripts with knowledge of the underlying technique.
 
 <p align="center">
   <img src="demo.gif" alt="Can you read the hidden word?" width="600">
   <br>
-  <em>Can you read it? Your brain can. An algorithm can't.</em>
+  <em>Can you read it? Your brain can. A bot can't.</em>
 </p>
 
 ## How it works
 
-Text and background are both random binary noise, scrolling in different directions. Each individual frame is indistinguishable from random static. But the human visual system integrates motion over time, automatically separating the two layers — revealing the text through differential motion perception.
-
-This is the same principle that makes cinema work: your brain fuses rapidly changing frames into coherent moving objects.
+Text and background are both random binary noise, scrolling in different directions. The human visual system automatically separates the two layers through differential motion perception — the same principle that makes cinema work.
 
 ## The demo
 
-The web demo shows three difficulty levels side by side:
+The web demo shows three modes side by side:
 
-| Mode | Text position | Frame hiding | Crackable? |
-|------|--------------|--------------|------------|
-| **Static** | Fixed center | No | Trivially — text never moves |
-| **Moving** | Lemniscate path | No | Yes — sliding window attack |
-| **Hardened** | Lemniscate path | Every other frame | Not yet |
+| Mode | Text position | Frame hiding | Security |
+|------|--------------|--------------|----------|
+| **Static** | Fixed center | No | A vision-only agent sees noise, but targeted scripts can extract the text since it never moves |
+| **Moving** | Lemniscate path | No | Harder — but crackable via sliding window optical flow attack |
+| **Hardened** | Lemniscate path | Every other frame | Resists all tested attacks |
 
 ## Attacks we tried
 
-We built an automated attack pipeline and tested multiple techniques:
+We built an attack pipeline and tested multiple techniques against the moving variant:
 
-- **Temporal variance** — per-pixel variance across frames. Defeated by shared noise texture.
-- **Optical flow segmentation** — separate horizontal vs vertical motion. Works on the moving variant.
-- **Sliding window flow ratio** — compute `flow_y / (flow_x + flow_y)` over short frame windows. The most effective attack — consistently cracks the moving variant on the first try.
-- **Phase correlation alignment** — align frames via frequency domain. Partially effective.
-- **Temporal PCA** — principal components of pixel time series. Noisy results.
+- **Temporal variance** — per-pixel variance across frames
+- **Optical flow segmentation** — separate horizontal vs vertical motion
+- **Sliding window flow ratio** — `flow_y / (flow_x + flow_y)` over short frame windows. Most effective attack — consistently cracks the moving variant
+- **Phase correlation alignment** — align frames via frequency domain
+- **Temporal PCA** — principal components of pixel time series
 
-### What defeated the sliding window
+### Hardening attempts
 
-The sliding window attack needs consistent text pixels in consecutive frame pairs to estimate optical flow. The hardened mode hides text on odd frames, breaking every frame pair. Result: attack accuracy dropped from 6/6 to ~1/6 correct characters.
+The sliding window attack needs consistent text in consecutive frame pairs. We tried many approaches before finding one that works:
 
 | Approach | Effect |
 |----------|--------|
@@ -47,6 +47,8 @@ The sliding window attack needs consistent text pixels in consecutive frame pair
 | Background direction rotation | Marginal improvement |
 | Pixel flips (3-15%) | Effective at 15% but hurts human readability |
 | **Frame hiding (every other frame)** | **Defeats the attack while remaining human-readable** |
+
+Frame hiding breaks every consecutive frame pair, dropping attack accuracy from 6/6 to ~1/6 correct characters.
 
 ## Run it
 
@@ -66,7 +68,3 @@ uv run --no-project \
 ```
 
 Results are saved to `attack_results/` with extracted images for each technique.
-
-## Status
-
-Experimental. This is a research project exploring whether persistence of vision can serve as a reliable human-verification primitive. The hardened mode resists all attacks we've tested so far, but that doesn't mean it's unbreakable.

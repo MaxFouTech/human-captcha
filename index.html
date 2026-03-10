@@ -243,9 +243,9 @@
             <div class="captcha-card" id="card-static">
                 <div class="card-header">
                     <span class="card-title">Static</span>
-                    <span class="card-badge badge-easy">trivial</span>
+                    <span class="card-badge badge-easy">basic</span>
                 </div>
-                <p class="card-description">No motion. Text is clearly visible in the noise pattern. Easily cracked by any image analysis.</p>
+                <p class="card-description">Fixed position. A vision-only bot sees noise, but targeted scripts can extract the static text.</p>
                 <div class="canvas-wrapper">
                     <canvas data-mode="static"></canvas>
                     <button class="pause-btn" data-pause>&#10074;&#10074;</button>
@@ -293,7 +293,7 @@
                     <span class="card-title">Hardened</span>
                     <span class="card-badge badge-secure">secure</span>
                 </div>
-                <p class="card-description">Text hidden every other frame. Breaks optical flow — not crackable by sliding window.</p>
+                <p class="card-description">Text hidden every other frame. Breaks optical flow — resists all tested attacks.</p>
                 <div class="canvas-wrapper">
                     <canvas data-mode="hardened"></canvas>
                     <button class="pause-btn" data-pause>&#10074;&#10074;</button>
