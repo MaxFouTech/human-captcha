@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motion CAPTCHA Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #1A1B26;
+            color: #C0CAF5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .page {
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #8FA888;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            font-size: 0.8rem;
+            color: #565F89;
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        .captcha-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 1100px) {
+            .captcha-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+        }
+
+        .captcha-card {
+            background: #24283B;
+            border: 1px solid #3B4261;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #C0CAF5;
+        }
+
+        .card-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .badge-easy {
+            background: #9ECE6A33;
+            color: #9ECE6A;
+        }
+
+        .badge-crackable {
+            background: #E0AF6833;
+            color: #E0AF68;
+        }
+
+        .badge-secure {
+            background: #7AA2F733;
+            color: #7AA2F7;
+        }
+
+        .card-description {
+            font-size: 0.72rem;
+            color: #565F89;
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            background: #1A1B26;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .canvas-wrapper canvas {
+            display: block;
+            image-rendering: pixelated;
+            transition: opacity 0.3s;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .pause-btn {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            background: rgba(26, 27, 38, 0.8);
+            border: 1px solid #3B4261;
+            color: #565F89;
+            font-size: 0.65rem;
+            padding: 3px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .pause-btn:hover { color: #C0CAF5; }
+
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.75rem;
+            color: #565F89;
+        }
+        .mode-toggle label { cursor: pointer; }
+        .mode-toggle input[type="checkbox"] {
+            accent-color: #8FA888;
+            cursor: pointer;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: #1A1B26;
+            border: 1px solid #3B4261;
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: #C0CAF5;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            outline: none;
+            min-width: 0;
+        }
+        input[type="text"]:focus { border-color: #8FA888; }
+        input[type="text"]::placeholder {
+            color: #565F89;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-verify {
+            background: #8FA888;
+            color: #1A1B26;
+            font-weight: 500;
+        }
+        .btn-verify:hover { background: #A3B899; }
+
+        .btn-refresh {
+            background: transparent;
+            border: 1px solid #3B4261;
+            color: #565F89;
+        }
+        .btn-refresh:hover { color: #C0CAF5; border-color: #565F89; }
+
+        .result {
+            font-size: 0.8rem;
+            min-height: 1.4em;
+        }
+        .result.success { color: #9ECE6A; }
+        .result.error { color: #F7768E; }
+
+        .hints {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .hint-letter {
+            width: 32px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 5px;
+            color: #C0CAF5;
+        }
+        .hint-correct { background: #4C7A4A; }
+        .hint-present { background: #8B7E2E; }
+        .hint-absent { background: #3B4261; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <h1 class="page-title">Motion CAPTCHA</h1>
+        <p class="page-subtitle">Read the 6 characters hidden in the animated noise</p>
+
+        <div class="captcha-grid">
+            <!-- Card 1: Static -->
+            <div class="captcha-card" id="card-static">
+                <div class="card-header">
+                    <span class="card-title">Static</span>
+                    <span class="card-badge badge-easy">trivial</span>
+                </div>
+                <p class="card-description">No motion. Text is clearly visible in the noise pattern. Easily cracked by any image analysis.</p>
+                <div class="canvas-wrapper">
+                    <canvas data-mode="static"></canvas>
+                    <button class="pause-btn" data-pause>&#10074;&#10074;</button>
+                </div>
+                <div class="mode-toggle">
+                    <input type="checkbox" data-hints checked>
+                    <label>Hints</label>
+                </div>
+                <div class="input-row">
+                    <input type="text" data-input placeholder="Enter 6 chars" maxlength="6" autocomplete="off" autocapitalize="characters">
+                    <button class="btn btn-verify" data-verify>Verify</button>
+                    <button class="btn btn-refresh" data-refresh>New</button>
+                </div>
+                <div class="result" data-result></div>
+                <div class="hints" data-hints-display></div>
+            </div>
+
+            <!-- Card 2: Moving (crackable) -->
+            <div class="captcha-card" id="card-moving">
+                <div class="card-header">
+                    <span class="card-title">Moving</span>
+                    <span class="card-badge badge-crackable">crackable</span>
+                </div>
+                <p class="card-description">Animated with differential motion. Crackable via sliding window optical flow attack.</p>
+                <div class="canvas-wrapper">
+                    <canvas data-mode="moving"></canvas>
+                    <button class="pause-btn" data-pause>&#10074;&#10074;</button>
+                </div>
+                <div class="mode-toggle">
+                    <input type="checkbox" data-hints checked>
+                    <label>Hints</label>
+                </div>
+                <div class="input-row">
+                    <input type="text" data-input placeholder="Enter 6 chars" maxlength="6" autocomplete="off" autocapitalize="characters">
+                    <button class="btn btn-verify" data-verify>Verify</button>
+                    <button class="btn btn-refresh" data-refresh>New</button>
+                </div>
+                <div class="result" data-result></div>
+                <div class="hints" data-hints-display></div>
+            </div>
+
+            <!-- Card 3: Hardened -->
+            <div class="captcha-card" id="card-hardened">
+                <div class="card-header">
+                    <span class="card-title">Hardened</span>
+                    <span class="card-badge badge-secure">secure</span>
+                </div>
+                <p class="card-description">Text hidden every other frame. Breaks optical flow — not crackable by sliding window.</p>
+                <div class="canvas-wrapper">
+                    <canvas data-mode="hardened"></canvas>
+                    <button class="pause-btn" data-pause>&#10074;&#10074;</button>
+                </div>
+                <div class="mode-toggle">
+                    <input type="checkbox" data-hints checked>
+                    <label>Hints</label>
+                </div>
+                <div class="input-row">
+                    <input type="text" data-input placeholder="Enter 6 chars" maxlength="6" autocomplete="off" autocapitalize="characters">
+                    <button class="btn btn-verify" data-verify>Verify</button>
+                    <button class="btn btn-refresh" data-refresh>New</button>
+                </div>
+                <div class="result" data-result></div>
+                <div class="hints" data-hints-display></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="captcha.js"></script>
+</body>
+</html>
