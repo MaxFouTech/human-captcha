@@ -7,7 +7,7 @@ An experimental CAPTCHA that exploits **persistence of vision** to distinguish h
 <p align="center">
   <img src="demo.gif" alt="Can you read the hidden word?" width="600">
   <br>
-  <em>Can you read it? Your brain can. A bot can't.</em>
+  <em>You can read this thanks to persistence of vision. To a vision model, it's just noise.</em>
 </p>
 
 ## How it works
